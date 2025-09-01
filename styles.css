@@ -1,0 +1,555 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+    color: #333;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    max-width: 1400px;
+    width: 100%;
+    background: white;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.main-content {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 20px;
+    gap: 20px;
+}
+
+.camera-section {
+    flex: 1;
+    min-width: 300px;
+    padding: 15px;
+}
+
+.animation-section {
+    flex: 1;
+    min-width: 400px;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.video-container {
+    position: relative;
+    width: 100%;
+    margin-bottom: 15px;
+    background: #333;
+    border-radius: 8px;
+    height: 240px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    overflow: hidden;
+}
+
+#webcam, #gameCanvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 8px;
+    border: 2px solid #4a00e0;
+    display: none;
+    object-fit: cover;
+}
+
+#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.camera-placeholder {
+    text-align: center;
+    padding: 20px;
+}
+
+.camera-icon {
+    font-size: 64px;
+    margin-bottom: 15px;
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 50px;
+    background: #4a00e0;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    font-size: 0.9rem;
+    flex: 1;
+    min-width: 120px;
+}
+
+.btn:hover {
+    background: #3575fc;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn-stop {
+    background: #ff4b4b;
+}
+
+.btn-teacher {
+    background: #9b59b6;
+}
+
+.btn-teacher:hover {
+    background: #8e44ad;
+}
+
+/* Estilos para la cuadrícula 6x6 */
+.animation-container {
+    flex: 1;
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    margin: 15px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    border: 2px dashed #4a00e0;
+    overflow: hidden;
+    min-height: 400px;
+}
+
+.grid-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 360px;
+    margin: 0 auto;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    width: 100%;
+    aspect-ratio: 1/1;
+    position: relative;
+}
+
+.grid-cell {
+    border: 1px solid #e0e0e0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+    position: relative;
+}
+
+.grid-cell:nth-child(odd) {
+    background: #f0f8ff;
+}
+
+.grid-cell.drag-over {
+    background-color: #d4edda;
+    border: 2px solid #28a745;
+}
+
+.character {
+    font-size: 32px;
+    position: absolute;
+    z-index: 10;
+    user-select: none;
+    cursor: grab;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.character.dragging {
+    cursor: grabbing;
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+.objective {
+    font-size: 28px;
+    position: absolute;
+    z-index: 5;
+    user-select: none;
+    cursor: grab;
+    width: 35px;
+    height: 35px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.objective.dragging {
+    cursor: grabbing;
+    opacity: 0.8;
+    transform: scale(1.1);
+}
+
+.grid-coordinates {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.x-coordinates {
+    position: absolute;
+    bottom: -25px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.x-coordinates span {
+    flex: 1;
+    text-align: center;
+    font-weight: bold;
+    color: #4a00e0;
+    font-size: 14px;
+}
+
+.y-coordinates {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.y-coordinates span {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #4a00e0;
+    font-size: 14px;
+}
+
+.animation-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.grid-size {
+    background: #4a00e0;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+}
+
+.program-output {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    min-height: 100px;
+    border: 1px dashed #4a00e0;
+}
+
+.program-title {
+    text-align: center;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #4a00e0;
+}
+
+#programContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.program-command {
+    background: #4a00e0;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.play-command {
+    background: #2ecc71 !important;
+    font-weight: bold;
+}
+
+.execute-command {
+    background: #e74c3c !important;
+    font-weight: bold;
+}
+
+.waiting-execute {
+    background: #f39c12;
+    color: white;
+    padding: 10px;
+    border-radius: 20px;
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.execute-status {
+    margin-top: 15px;
+    text-align: center;
+}
+
+/* Panel del docente */
+.teacher-panel {
+    background: #eef4ff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 15px;
+    border: 2px solid #9b59b6;
+}
+
+.teacher-panel h3 {
+    color: #9b59b6;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.teacher-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.form-group label {
+    font-weight: bold;
+    color: #4a00e0;
+}
+
+.form-group select, .form-group input {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    width: 100%;
+}
+
+.position-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.coord-input {
+    width: 100px;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.instructions {
+    background: #eef4ff;
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 15px;
+    font-size: 0.9rem;
+}
+
+.instructions h3 {
+    margin-bottom: 10px;
+    color: #4a00e0;
+}
+
+.instructions ul {
+    padding-left: 20px;
+}
+
+.instructions li {
+    margin-bottom: 5px;
+}
+
+.detection-status {
+    text-align: center;
+    margin: 10px 0;
+    font-weight: bold;
+    color: #4a00e0;
+}
+
+.success-message {
+    background: #2ecc71;
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+.position-hint {
+    text-align: center;
+    margin-top: 10px;
+    font-style: italic;
+    color: #6c757d;
+}
+
+.coordinate-example {
+    font-size: 0.8rem;
+    color: #6c757d;
+    margin-top: 3px;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    .main-content {
+        flex-direction: column;
+    }
+    
+    .camera-section, .animation-section {
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+        border-radius: 10px;
+    }
+    
+    .main-content {
+        padding: 15px;
+        gap: 15px;
+    }
+    
+    .controls {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .animation-container {
+        padding: 15px;
+        min-height: 350px;
+    }
+    
+    .grid-wrapper {
+        max-width: 300px;
+    }
+    
+    .character {
+        font-size: 28px;
+        width: 35px;
+        height: 35px;
+    }
+    
+    .objective {
+        font-size: 24px;
+        width: 30px;
+        height: 30px;
+    }
+    
+    .x-coordinates span, .y-coordinates span {
+        font-size: 12px;
+    }
+    
+    .teacher-panel {
+        padding: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        border-radius: 8px;
+    }
+    
+    .main-content {
+        padding: 10px;
+        gap: 10px;
+    }
+    
+    .video-container {
+        height: 200px;
+    }
+    
+    .animation-container {
+        padding: 10px;
+        min-height: 300px;
+    }
+    
+    .grid-wrapper {
+        max-width: 250px;
+    }
+    
+    .character {
+        font-size: 24px;
+        width: 30px;
+        height: 30px;
+    }
+    
+    .objective {
+        font-size: 20px;
+        width: 25px;
+        height: 25px;
+    }
+    
+    .program-output {
+        padding: 10px;
+    }
+    
+    .teacher-panel {
+        padding: 10px;
+    }
+    
+    .teacher-panel h3 {
+        font-size: 1.2rem;
+    }
+}

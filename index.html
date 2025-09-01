@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programación Tangible con ArUco - Modo Docente</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="camera-section">
+                <div class="video-container">
+                    <video id="webcam" autoplay muted playsinline></video>
+                    <canvas id="gameCanvas"></canvas>
+                    <div class="camera-placeholder">
+                        <div class="camera-icon">📷</div>
+                        <p>Presiona "Comenzar" para activar la cámara</p>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="startButton" class="btn">COMENZAR</button>
+                    <button id="stopButton" class="btn btn-stop">DETENER</button>
+                    <button id="resetButton" class="btn">REINICIAR</button>
+                    <button id="teacherModeButton" class="btn btn-teacher">Modo Docente</button>
+                </div>
+                
+                <div class="detection-status">
+                    <span id="status">Presiona Comenzar para activar la cámara</span>
+                </div>
+                 <div class="program-output">
+                    <div class="program-title">ALGORITMO:</div>
+                    <div id="programContainer">Esperando PLAY ...</div>
+                </div>
+            </div>
+            
+            <div class="animation-section">
+                <div class="animation-header">
+                    <h2>ÁREA DE PROGRAMACION</h2>
+                </div>
+                
+                <div class="animation-container">
+                    <div class="grid-wrapper">
+                        <div class="grid-container" id="grid"></div>
+                        <div class="character" id="character" draggable="true">🤖</div>
+                        <div class="objective" id="objective" draggable="true">⭐</div>
+                        <div class="grid-coordinates">
+                            <div class="x-coordinates">
+                                <span>A</span><span>B</span><span>C</span><span>D</span><span>E</span><span>F</span>
+                            </div>
+                            <div class="y-coordinates">
+                                <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Panel de docente (inicialmente oculto) -->
+                <div id="teacherPanel" class="teacher-panel" style="display: none;">
+                    <h3>Panel del Docente</h3>
+                    <p class="position-hint">Arrastra los elementos a la posición deseada en la cuadrícula</p>
+                    
+                    <div class="teacher-controls">
+                        <div class="form-group">
+                            <label>Personaje:</label>
+                            <select id="characterSelect">
+                                <option value="🤖">Robot (🤖)</option>
+                                <option value="🚗">Auto (🚗)</option>
+                                <option value="🐱">Gato (🐱)</option>
+                                <option value="🐦">Pájaro (🐦)</option>
+                                <option value="🚀">Cohete (🚀)</option>
+                                <option value="🦋">Mariposa (🦋)</option>
+                                <option value="custom">Subir imagen...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Objetivo:</label>
+                            <select id="objectiveSelect">
+                                <option value="⭐">Estrella (⭐)</option>
+                                <option value="🏠">Casa (🏠)</option>
+                                <option value="🌻">Planta (🌻)</option>
+                                <option value="🎯">Target (🎯)</option>
+                                <option value="🏁">Bandera (🏁)</option>
+                                <option value="🍎">Manzana (🍎)</option>
+                                <option value="custom">Subir imagen...</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group" id="customCharacterGroup" style="display: none;">
+                            <label>Subir personaje:</label>
+                            <input type="file" id="customCharacterUpload" accept="image/*">
+                        </div>
+                        
+                        <div class="form-group" id="customObjectiveGroup" style="display: none;">
+                            <label>Subir objetivo:</label>
+                            <input type="file" id="customObjectiveUpload" accept="image/*">
+                        </div>
+                        
+                        <button id="saveConfigButton" class="btn">Guardar Configuración</button>
+                        <button id="exitTeacherMode" class="btn btn-stop">Salir del Modo Docente</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cargar la biblioteca js-aruco -->
+    <script src="https://raw.githack.com/jcmellado/js-aruco/master/src/aruco.js"></script>
+    <script src="https://raw.githack.com/jcmellado/js-aruco/master/src/cv.js"></script>
+    <script src="https://raw.githack.com/jcmellado/js-aruco/master/src/posit1.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
