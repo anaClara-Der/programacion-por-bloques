@@ -467,7 +467,7 @@ body {
     animation: fadeIn 0.5s ease-in-out;
 }
 
-.success-message-center {
+.success-message-center, .success-message-try-again {
     background: linear-gradient(135deg, #2ecc71, #27ae60);
     color: white;
     padding: 30px 40px;
@@ -480,14 +480,16 @@ body {
     border: 4px solid #fff;
     max-width: 80%;
 }
-
-.success-message-center .emoji {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    display: block;
+.success-message-try-again{
+    background: linear-gradient(135deg, #c92c4e, #b62141);
 }
 
+
 .success-message-center .text {
+    margin-bottom: 20px;
+    font-size: 2rem;
+}
+.success-message-try-again .text{
     margin-bottom: 20px;
     font-size: 2rem;
 }
@@ -505,6 +507,18 @@ body {
     font-size: 1.2rem;
 }
 
+.success-message-try-again .close-btn {
+    background: white;
+    color: #c92c4e;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.3s;
+    font-size: 1.2rem;
+}
 .success-message-center .close-btn:hover {
     transform: scale(1.05);
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
@@ -625,6 +639,7 @@ body {
         padding: 8px 20px;
     }
 }
+
 
 @media (max-width: 480px) {
     body {

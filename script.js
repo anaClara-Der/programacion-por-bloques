@@ -552,9 +552,40 @@ document.addEventListener("DOMContentLoaded", () => {
             statusDiv.textContent = "¡OBJETO ALCANZADO!";
             showSuccessMessage();
           } else {
-            statusDiv.textContent = "INTENTA NUEVAMENTE";
-            isExecuting = false;
-            isWaitingForPlay = true;
+            const overlay = document.createElement("div");
+            overlay.className = "success-overlay";
+
+            const successMsg = document.createElement("div");
+            successMsg.className = "success-message-try-again";
+
+            const text = document.createElement("div");
+            text.className = "text";
+            text.textContent = "¡INTENTALO DE NUEVO!";
+            text.style.fontSize = "1rem";
+            text.style.fontWeight = "bold";
+            text.style.marginBottom = "10px";
+
+            const closeBtn = document.createElement("button");
+            closeBtn.className = "close-btn";
+            closeBtn.textContent = "CONTINUAR";
+
+            closeBtn.addEventListener("click", function () {
+              overlay.remove();
+              isExecuting = false;
+              isWaitingForPlay = true;
+              resetProgram();
+            });
+
+            successMsg.appendChild(text);
+
+            successMsg.appendChild(closeBtn);
+
+            overlay.appendChild(successMsg);
+
+            const gridWrapper = document.querySelector(".grid-wrapper");
+            gridWrapper.appendChild(overlay);
+
+            isExecuting = true;
           }
         }, 500);
         return;
