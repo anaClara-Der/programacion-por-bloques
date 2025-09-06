@@ -120,17 +120,26 @@ body {
     transform: translateY(0);
 }
 
-.btn-stop {
-    background: #ff4b4b;
+.btn-delete{
+    background:#e71010;
+}
+.btn-delete:hover{
+    background:#e42929;
 }
 
 .btn-teacher {
     background: #9b59b6;
-}
-
-.btn-teacher:hover {
+}.btn-teacher:hover {
     background: #8e44ad;
 }
+
+.btn-comenzar{
+    background: #079c34;
+}
+.btn-comenzar:hover{
+    background: #0bc744;
+}
+
 
 /* Estilos para la cuadrícula 6x6 */
 .animation-container {
@@ -162,6 +171,7 @@ body {
     width: 100%;
     aspect-ratio: 1/1;
     position: relative;
+    
 }
 
 .grid-cell {
@@ -171,6 +181,7 @@ body {
     justify-content: center;
     background: #f8f9fa;
     position: relative;
+    border: 1px solid #0e0a1d; /* Borde más oscuro añadido */
 }
 
 .grid-cell:nth-child(odd) {
@@ -441,16 +452,115 @@ body {
     margin-top: 3px;
 }
 
-/* Responsive design */
-@media (max-width: 1200px) {
-    .main-content {
-        flex-direction: column;
-    }
-    
-    .camera-section, .animation-section {
-        min-width: 100%;
-    }
+/* Cartel de éxito en el centro de la cuadrícula */
+.success-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    animation: fadeIn 0.5s ease-in-out;
 }
+
+.success-message-center {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+    color: white;
+    padding: 30px 40px;
+    border-radius: 20px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: popIn 0.5s ease-in-out;
+    border: 4px solid #fff;
+    max-width: 80%;
+}
+
+.success-message-center .emoji {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    display: block;
+}
+
+.success-message-center .text {
+    margin-bottom: 20px;
+    font-size: 2rem;
+}
+
+.success-message-center .close-btn {
+    background: white;
+    color: #27ae60;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: all 0.3s;
+    font-size: 1.2rem;
+}
+
+.success-message-center .close-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    80% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+/* Estilos para los contadores de comandos */
+.program-command {
+    background: #4a00e0;
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+    margin: 5px;
+}
+
+.command-text {
+    margin-right: 5px;
+}
+
+.count-badge {
+    background: #ff6b6b;
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-left: 5px;
+}
+
+.play-command {
+    background: #2ecc71 !important;
+    font-weight: bold;
+}
+
+.play-command .count-badge {
+    background: #27ae60;
+}
+
+/* Responsive design */
+
 
 @media (max-width: 768px) {
     .container {
@@ -499,6 +609,20 @@ body {
     
     .teacher-panel {
         padding: 15px;
+    }
+    
+    .success-message-center {
+        padding: 20px;
+        font-size: 1.2rem;
+    }
+    
+    .success-message-center .text {
+        font-size: 1.5rem;
+    }
+    
+    .success-message-center .close-btn {
+        font-size: 1rem;
+        padding: 8px 20px;
     }
 }
 
@@ -551,5 +675,19 @@ body {
     
     .teacher-panel h3 {
         font-size: 1.2rem;
+    }
+    
+    .success-message-center {
+        padding: 15px;
+        font-size: 1rem;
+    }
+    
+    .success-message-center .text {
+        font-size: 1.2rem;
+    }
+    
+    .success-message-center .close-btn {
+        font-size: 0.9rem;
+        padding: 6px 15px;
     }
 }

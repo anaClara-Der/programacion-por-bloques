@@ -18,20 +18,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const ctx = gameCanvas.getContext("2d");
 
   // Configuración
-  const gridSize = 6; // Cuadrícula 6x6
-  let cellSize = 60; // Tamaño de cada celda en píxeles (se ajustará responsive)
+  const gridSize = 6;
+  let cellSize = 60;
   const videoWidth = 320;
   const videoHeight = 240;
 
   gameCanvas.width = videoWidth;
   gameCanvas.height = videoHeight;
 
+  // Límites para subida de archivos
+  const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
   // Configuración por defecto
   let config = {
     character: "🤖",
     objective: "⭐",
-    startPosition: { x: 0, y: 0 }, // A1 por defecto
-    targetPosition: { x: 5, y: 5 }, // F6 por defecto
+    startPosition: { x: 0, y: 0 },
+    targetPosition: { x: 5, y: 5 },
     customCharacter: null,
     customObjective: null,
   };
@@ -66,13 +69,45 @@ document.addEventListener("DOMContentLoaded", () => {
     gridY: 0,
   };
 
-  // 1. Inicializar la cuadrícula 6x6
+  // Función para sanitizar texto
+  function sanitizeText(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // limpiar programContainer construyendo nodos
+  function clearProgramContainer() {
+    while (programContainer.firstChild) {
+      programContainer.removeChild(programContainer.firstChild);
+    }
+  }
+
+  function appendProgramLine(text, className, count = 1) {
+    const div = document.createElement("div");
+    div.className = className || "program-command";
+
+    const textSpan = document.createElement("span");
+    textSpan.className = "command-text";
+    textSpan.textContent = text;
+    div.appendChild(textSpan);
+
+    if (count > 1) {
+      const countBadge = document.createElement("span");
+      countBadge.className = "count-badge";
+      countBadge.textContent = count;
+      div.appendChild(countBadge);
+    }
+
+    programContainer.appendChild(div);
+  }
+
+  //Inicializar la cuadrícula 6x6
   function initializeGrid() {
     grid.innerHTML = "";
 
-    // Calcular tamaño responsive
     const gridWrapper = document.querySelector(".grid-wrapper");
-    const availableWidth = gridWrapper.clientWidth;
+    const availableWidth = gridWrapper.clientWidth || 360;
     cellSize = Math.floor(availableWidth / gridSize);
 
     grid.style.width = `${gridSize * cellSize}px`;
@@ -87,7 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
         cell.dataset.x = x;
         cell.dataset.y = y;
 
-        // Configurar eventos de drag and drop
         cell.addEventListener("dragover", handleDragOver);
         cell.addEventListener("drop", handleDrop);
         cell.addEventListener("dragenter", handleDragEnter);
@@ -97,64 +131,61 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // Ajustar posición de los elementos después de calcular cellSize
     updateCharacterPosition();
     positionObjective(config.targetPosition.x, config.targetPosition.y);
   }
 
-  // 2. Configurar eventos de drag and drop para los elementos
+  // Configurar eventos de drag and drop
   function setupDragAndDrop() {
-    // Eventos para el personaje
     character.addEventListener("dragstart", handleDragStart);
     character.addEventListener("dragend", handleDragEnd);
-
-    // Eventos para el objetivo
     objective.addEventListener("dragstart", handleDragStart);
     objective.addEventListener("dragend", handleDragEnd);
   }
 
-  // 3. Manejar inicio de arrastre
   function handleDragStart(e) {
     this.classList.add("dragging");
-    e.dataTransfer.setData("text/plain", this.id);
-    e.dataTransfer.effectAllowed = "move";
+    try {
+      e.dataTransfer.setData("text/plain", this.id);
+      e.dataTransfer.effectAllowed = "move";
+    } catch (err) {
+      console.warn("Drag start setData falló:", err);
+    }
   }
 
-  // 4. Manejar fin de arrastre
   function handleDragEnd() {
     this.classList.remove("dragging");
-    // Remover clase de todas las celdas
     document.querySelectorAll(".grid-cell").forEach((cell) => {
       cell.classList.remove("drag-over");
     });
   }
 
-  // 5. Manejar arrastre sobre celda
   function handleDragOver(e) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
+    try {
+      e.dataTransfer.dropEffect = "move";
+    } catch (err) {}
   }
 
-  // 6. Manejar entrada a celda
   function handleDragEnter(e) {
     e.preventDefault();
     this.classList.add("drag-over");
   }
 
-  // 7. Manejar salida de celda
   function handleDragLeave() {
     this.classList.remove("drag-over");
   }
 
-  // 8. Manejar soltar elemento
   function handleDrop(e) {
     e.preventDefault();
     this.classList.remove("drag-over");
 
     const elementId = e.dataTransfer.getData("text/plain");
     const element = document.getElementById(elementId);
-    const x = parseInt(this.dataset.x);
-    const y = parseInt(this.dataset.y);
+    const x = parseInt(this.dataset.x, 10);
+    const y = parseInt(this.dataset.y, 10);
+
+    if (!element || isNaN(x) || isNaN(y)) return;
 
     if (elementId === "character") {
       config.startPosition = { x, y };
@@ -162,46 +193,42 @@ document.addEventListener("DOMContentLoaded", () => {
       config.targetPosition = { x, y };
     }
 
-    // Posicionar el elemento
     positionElement(element, x, y);
   }
 
-  // 9. Posicionar elemento en la cuadrícula
   function positionElement(element, x, y) {
     element.style.left = `${x * cellSize + cellSize / 2}px`;
     element.style.top = `${y * cellSize + cellSize / 2}px`;
     element.style.transform = "translate(-50%, -50%)";
   }
 
-  // 10. Aplicar configuración
   function applyConfiguration() {
-    // Aplicar personaje
+    while (character.firstChild) character.removeChild(character.firstChild);
     if (config.customCharacter) {
-      character.innerHTML = "";
       const img = document.createElement("img");
       img.src = config.customCharacter;
+      img.alt = "Personaje personalizado";
       img.style.width = "40px";
       img.style.height = "40px";
       img.style.objectFit = "contain";
       character.appendChild(img);
     } else {
-      character.innerHTML = config.character;
+      character.textContent = config.character;
     }
 
-    // Aplicar objetivo
+    while (objective.firstChild) objective.removeChild(objective.firstChild);
     if (config.customObjective) {
-      objective.innerHTML = "";
       const img = document.createElement("img");
       img.src = config.customObjective;
+      img.alt = "Objetivo personalizado";
       img.style.width = "35px";
       img.style.height = "35px";
       img.style.objectFit = "contain";
       objective.appendChild(img);
     } else {
-      objective.innerHTML = config.objective;
+      objective.textContent = config.objective;
     }
 
-    // Posicionar elementos
     characterState.gridX = config.startPosition.x;
     characterState.gridY = config.startPosition.y;
     characterState.rotation = 0;
@@ -209,23 +236,20 @@ document.addEventListener("DOMContentLoaded", () => {
     updateCharacterPosition();
     positionObjective(config.targetPosition.x, config.targetPosition.y);
 
-    // Reiniciar programa
     program = [];
     isWaitingForPlay = true;
     isExecuting = false;
     updateProgramOutput();
 
-    statusDiv.textContent = "Configuración aplicada. Esperando PLAY...";
+    statusDiv.textContent = "ESPERANDO PLAY ▶...";
   }
 
-  // 11. Posicionar objetivo
   function positionObjective(x, y) {
     objective.style.left = `${x * cellSize + cellSize / 2}px`;
     objective.style.top = `${y * cellSize + cellSize / 2}px`;
     objective.style.transform = "translate(-50%, -50%)";
   }
 
-  // 12. Actualizar posición del personaje
   function updateCharacterPosition() {
     characterState.x = characterState.gridX * cellSize + cellSize / 2;
     characterState.y = characterState.gridY * cellSize + cellSize / 2;
@@ -235,7 +259,6 @@ document.addEventListener("DOMContentLoaded", () => {
     character.style.transform = `translate(-50%, -50%) rotate(${characterState.rotation}deg)`;
   }
 
-  // 13. Verificar si se alcanzó el objetivo
   function checkObjectiveReached() {
     return (
       characterState.gridX === config.targetPosition.x &&
@@ -243,7 +266,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
-  // 14. Mover personaje según la dirección actual
   function moveCharacter() {
     const radians = (characterState.rotation * Math.PI) / 180;
     const moveX = Math.round(Math.cos(radians));
@@ -252,7 +274,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const newX = characterState.gridX + moveX;
     const newY = characterState.gridY + moveY;
 
-    // Verificar límites del grid
     if (newX >= 0 && newX < gridSize && newY >= 0 && newY < gridSize) {
       characterState.gridX = newX;
       characterState.gridY = newY;
@@ -262,7 +283,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return false;
   }
 
-  // 15. Modo docente
   function toggleTeacherMode() {
     isTeacherMode = !isTeacherMode;
     teacherPanel.style.display = isTeacherMode ? "block" : "none";
@@ -272,22 +292,24 @@ document.addEventListener("DOMContentLoaded", () => {
     teacherModeButton.classList.toggle("btn-teacher-active", isTeacherMode);
 
     if (isTeacherMode) {
-      // Cargar valores actuales en los formularios
-      document.getElementById("characterSelect").value = config.character;
-      document.getElementById("objectiveSelect").value = config.objective;
+      document.getElementById("characterSelect").value =
+        config.character || "🤖";
+      document.getElementById("objectiveSelect").value =
+        config.objective || "⭐";
     }
   }
 
-  // 16. Guardar configuración del docente
   function saveTeacherConfiguration() {
-    config.character = document.getElementById("characterSelect").value;
-    config.objective = document.getElementById("objectiveSelect").value;
+    const charVal = document.getElementById("characterSelect").value;
+    const objVal = document.getElementById("objectiveSelect").value;
+
+    config.character = charVal;
+    config.objective = objVal;
 
     applyConfiguration();
     toggleTeacherMode();
   }
 
-  // 17. Manejar subida de imágenes personalizadas
   function setupImageUploads() {
     const characterSelect = document.getElementById("characterSelect");
     const objectiveSelect = document.getElementById("objectiveSelect");
@@ -314,28 +336,54 @@ document.addEventListener("DOMContentLoaded", () => {
         this.value === "custom" ? "block" : "none";
     });
 
+    function validateImageFile(file) {
+      if (!file) return { ok: false, reason: "No file" };
+      if (file.type === "image/svg+xml")
+        return { ok: false, reason: "SVG not allowed" };
+      if (!(file.type === "image/png" || file.type === "image/jpeg")) {
+        return { ok: false, reason: "Only PNG/JPEG allowed" };
+      }
+      if (file.size > MAX_FILE_SIZE)
+        return { ok: false, reason: "File too large" };
+      return { ok: true };
+    }
+
+    function setCustomImage(file, target) {
+      const v = validateImageFile(file);
+      if (!v.ok) {
+        alert("Error al subir imagen: " + v.reason);
+        return;
+      }
+      if (target === "character" && config.customCharacter) {
+        URL.revokeObjectURL(config.customCharacter);
+      }
+      if (target === "objective" && config.customObjective) {
+        URL.revokeObjectURL(config.customObjective);
+      }
+
+      const blobUrl = URL.createObjectURL(file);
+
+      if (target === "character") {
+        config.customCharacter = blobUrl;
+      } else {
+        config.customObjective = blobUrl;
+      }
+      applyConfiguration();
+    }
+
     customCharacterUpload.addEventListener("change", function (e) {
       if (e.target.files && e.target.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-          config.customCharacter = event.target.result;
-        };
-        reader.readAsDataURL(e.target.files[0]);
+        setCustomImage(e.target.files[0], "character");
       }
     });
 
     customObjectiveUpload.addEventListener("change", function (e) {
       if (e.target.files && e.target.files[0]) {
-        const reader = new FileReader();
-        reader.onload = function (event) {
-          config.customObjective = event.target.result;
-        };
-        reader.readAsDataURL(e.target.files[0]);
+        setCustomImage(e.target.files[0], "objective");
       }
     });
   }
 
-  // 18. Acceder a la cámara
   async function setupCamera() {
     try {
       statusDiv.textContent = "Activando cámara...";
@@ -361,34 +409,47 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error al acceder a la cámara:", error);
       statusDiv.textContent =
-        "Error: No se pudo acceder a la cámara. Asegúrate de servir esta página desde un servidor local (como Live Server).";
+        "Error: No se pudo acceder a la cámara. Serví esta página desde HTTPS o localhost.";
       cameraPlaceholder.style.display = "block";
-      cameraPlaceholder.innerHTML = `
-                        <div class="camera-icon">❌</div>
-                        <p>Error al acceder a la cámara</p>
-                        <p>Asegúrate de servir esta página desde un servidor local</p>
-                    `;
+      while (cameraPlaceholder.firstChild)
+        cameraPlaceholder.removeChild(cameraPlaceholder.firstChild);
+      const icon = document.createElement("div");
+      icon.className = "camera-icon";
+      icon.textContent = "❌";
+      const p1 = document.createElement("p");
+      p1.textContent = "Error al acceder a la cámara";
+      const p2 = document.createElement("p");
+      p2.textContent =
+        "Asegúrate de servir esta página desde un servidor local o HTTPS";
+      cameraPlaceholder.appendChild(icon);
+      cameraPlaceholder.appendChild(p1);
+      cameraPlaceholder.appendChild(p2);
+
       return false;
     }
   }
 
-  // 19. Inicializar el detector ArUco
   function initArucoDetector() {
-    if (typeof AR === "undefined") {
+    if (!window.AR || typeof AR.Detector !== "function") {
       statusDiv.textContent =
-        "Error: Biblioteca AR no cargada. Verifica tu conexión a internet.";
+        "Error: Biblioteca AR no cargada o inválida. Verifica que /libs/*.js esté presente.";
       return false;
     }
-    detector = new AR.Detector();
-    console.log("Detector ArUco inicializado.");
-    return true;
+    try {
+      detector = new AR.Detector();
+      console.log("Detector ArUco inicializado.");
+      return true;
+    } catch (err) {
+      console.error("Error inicializando detector AR:", err);
+      statusDiv.textContent = "Error al iniciar detector AR.";
+      return false;
+    }
   }
 
-  // 20. Procesar marcadores
-  function handleMarkerDetection(markerId) {
+  async function handleMarkerDetection(markerId, markerCorners) {
     if (isExecuting || isTeacherMode) return;
 
-    const currentTime = new Date().getTime();
+    const currentTime = Date.now();
 
     if (
       lastProcessedMarker.id === markerId &&
@@ -404,7 +465,7 @@ document.addEventListener("DOMContentLoaded", () => {
         isWaitingForPlay = false;
         program = [];
         statusDiv.textContent =
-          "¡PLAY detectado! Ahora muestra los movimientos";
+          "¡PLAY DETECTADO! AHORA MUESTRA LOS MOVIMIENTOS";
 
         program.push({
           id: markerId,
@@ -414,36 +475,39 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         updateProgramOutput();
       } else {
-        statusDiv.textContent = "Esperando PLAY para comenzar...";
+        statusDiv.textContent = "▶ ESPERANDO PLAY PARA COMENZAR...";
       }
     } else {
       if (markerId === 0) {
         isWaitingForPlay = false;
         program = [{ id: 0, name: "PLAY", icon: "▶️", type: "control" }];
-        statusDiv.textContent = "¡PLAY detectado! Reiniciando programa...";
+        statusDiv.textContent = "¡PLAY DETECTADO! REINICIANDO PROGRAMA...";
       } else if (markerId === 5) {
         if (program.length > 1) {
-          statusDiv.textContent = "¡EJECUTAR detectado! Ejecutando programa...";
+          statusDiv.textContent = "EJECUTANDO PROGRAMA...";
           executeProgram();
         } else {
           statusDiv.textContent =
             "Programa vacío. Agrega movimientos antes de EJECUTAR";
         }
-      } else if (markerActions[markerId].type === "movement") {
+      } else if (
+        markerActions[markerId] &&
+        markerActions[markerId].type === "movement"
+      ) {
+        statusDiv.textContent = `Movimiento agregado: ${markerActions[markerId].name}`;
+
         program.push({
           id: markerId,
           name: markerActions[markerId].name,
           icon: markerActions[markerId].icon,
           type: markerActions[markerId].type,
         });
-        statusDiv.textContent = `Movimiento agregado: ${markerActions[markerId].name}`;
       }
 
       updateProgramOutput();
     }
   }
 
-  // 21. Ejecutar programa
   function executeProgram() {
     if (program.length <= 1) {
       statusDiv.textContent =
@@ -453,116 +517,175 @@ document.addEventListener("DOMContentLoaded", () => {
 
     isExecuting = true;
 
-    // Resetear posición pero mantener la rotación
     characterState.gridX = config.startPosition.x;
     characterState.gridY = config.startPosition.y;
     updateCharacterPosition();
 
     statusDiv.textContent = "Ejecutando programa...";
 
+    const optimizedProgram = [];
+    let currentCount = 1;
+
+    for (let i = 1; i < program.length; i++) {
+      if (
+        program[i].id === program[i - 1].id &&
+        program[i].type === "movement"
+      ) {
+        currentCount++;
+      } else {
+        optimizedProgram.push({ ...program[i - 1], count: currentCount });
+        currentCount = 1;
+      }
+    }
+    optimizedProgram.push({
+      ...program[program.length - 1],
+      count: currentCount,
+    });
+
     let delay = 1000;
-    let currentIndex = 1;
+    let currentIndex = 0;
 
     function executeNextMovement() {
-      if (currentIndex >= program.length) {
-        // Programa completado
+      if (currentIndex >= optimizedProgram.length) {
         setTimeout(() => {
           if (checkObjectiveReached()) {
-            statusDiv.textContent = "¡Objetivo alcanzado!";
-
-            // Mostrar mensaje de todo ok
-            const successMsg = document.createElement("div");
-            successMsg.className = "success-message";
-            successMsg.textContent = "¡Felicidades!.";
-            programContainer.appendChild(successMsg);
+            statusDiv.textContent = "¡OBJETO ALCANZADO!";
+            showSuccessMessage();
           } else {
-            statusDiv.textContent = " Intenta nuevamente.";
+            statusDiv.textContent = "INTENTA NUEVAMENTE";
+            isExecuting = false;
+            isWaitingForPlay = true;
           }
-          isExecuting = false;
-          isWaitingForPlay = true;
         }, 500);
         return;
       }
 
-      const movement = program[currentIndex];
-      statusDiv.textContent = `Ejecutando: ${movement.name}`;
+      const movement = optimizedProgram[currentIndex];
+      const movementName =
+        movement.count > 1
+          ? `${movement.name} ×${movement.count}`
+          : movement.name;
 
-      switch (movement.id) {
-        case 1: // GIRAR_IZQUIERDA
-          characterState.rotation -= 90;
-          break;
-        case 2: // GIRAR_DERECHA
-          characterState.rotation += 90;
-          break;
-        case 3: // ADELANTE
-          moveCharacter();
-          break;
-        case 4: // ATRAS
-          characterState.rotation += 180;
-          moveCharacter();
-          characterState.rotation -= 180;
-          break;
+      statusDiv.textContent = `Ejecutando: ${movementName}`;
+
+      let executionsLeft = movement.count;
+
+      function executeSingleMovement() {
+        if (executionsLeft <= 0) {
+          currentIndex++;
+          setTimeout(executeNextMovement, 1000);
+          return;
+        }
+
+        switch (movement.id) {
+          case 1:
+            characterState.rotation -= 90;
+            break;
+          case 2:
+            characterState.rotation += 90;
+            break;
+          case 3:
+            moveCharacter();
+            break;
+          case 4:
+            characterState.rotation += 180;
+            moveCharacter();
+            characterState.rotation -= 180;
+            break;
+        }
+
+        updateCharacterPosition();
+        executionsLeft--;
+
+        if (executionsLeft > 0) {
+          setTimeout(executeSingleMovement, 600);
+        } else {
+          currentIndex++;
+          setTimeout(executeNextMovement, 1000);
+        }
       }
 
-      updateCharacterPosition();
-      currentIndex++;
-
-      setTimeout(executeNextMovement, 1000);
+      executeSingleMovement();
     }
 
     setTimeout(executeNextMovement, delay);
   }
 
-  // 22. Actualizar visualización del programa
   function updateProgramOutput() {
+    clearProgramContainer();
+
     if (program.length === 0) {
-      programContainer.innerHTML = "Esperando PLAY ...";
+      appendProgramLine("ESPERANDO PLAY...", "program-command");
       return;
     }
 
-    programContainer.innerHTML = program
-      .map(
-        (cmd, index) =>
-          `<div class="program-command ${index === 0 ? "play-command" : ""}">${
-            cmd.icon
-          } ${cmd.name}</div>`
-      )
-      .join("");
+    const programWithCounts = [];
+    let currentCount = 1;
+
+    for (let i = 0; i < program.length; i++) {
+      if (
+        i > 0 &&
+        program[i].id === program[i - 1].id &&
+        program[i].type === "movement"
+      ) {
+        currentCount++;
+      } else {
+        if (i > 0) {
+          programWithCounts.push({ ...program[i - 1], count: currentCount });
+        }
+        currentCount = 1;
+      }
+    }
+    programWithCounts.push({
+      ...program[program.length - 1],
+      count: currentCount,
+    });
+
+    programWithCounts.forEach((cmd, index) => {
+      let text = `${cmd.icon} ${cmd.name}`;
+
+      appendProgramLine(
+        text,
+        index === 0 ? "program-command play-command" : "program-command",
+        cmd.count > 1 ? cmd.count : 1
+      );
+    });
 
     if (program.length > 1 && program[0].id === 0 && !isExecuting) {
       const executeStatus = document.createElement("div");
       executeStatus.className = "execute-status";
-      executeStatus.innerHTML =
-        '<div class="waiting-execute">⌛ Esperando EJECUTAR (ID 5)...</div>';
-
-      if (!document.querySelector(".execute-status")) {
-        programContainer.appendChild(executeStatus);
-      }
+      const waiting = document.createElement("div");
+      waiting.className = "waiting-execute";
+      waiting.textContent = "⌛ Esperando EJECUTAR...";
+      executeStatus.appendChild(waiting);
+      programContainer.appendChild(executeStatus);
     }
   }
 
-  // 23. Bucle principal de detección
   function tick() {
     if (isRunning && webcam.readyState === webcam.HAVE_ENOUGH_DATA) {
-      ctx.drawImage(webcam, 0, 0, videoWidth, videoHeight);
-      const imageData = ctx.getImageData(0, 0, videoWidth, videoHeight);
-      const markers = detector.detect(imageData);
+      try {
+        ctx.drawImage(webcam, 0, 0, videoWidth, videoHeight);
+        const imageData = ctx.getImageData(0, 0, videoWidth, videoHeight);
+        const markers = detector.detect(imageData);
 
-      if (markers.length > 0) {
-        markers.forEach((marker) => {
-          const markerId = marker.id;
-          if (markerActions.hasOwnProperty(markerId)) {
-            handleMarkerDetection(markerId);
-          }
-        });
-      } else if (program.length === 0 && !isExecuting && !isTeacherMode) {
-        statusDiv.textContent = "Esperando PLAY para comenzar...";
+        if (markers && markers.length > 0) {
+          markers.forEach((marker) => {
+            const markerId = marker.id;
+            if (Object.prototype.hasOwnProperty.call(markerActions, markerId)) {
+              handleMarkerDetection(markerId, marker.corners);
+            }
+          });
+        } else if (program.length === 0 && !isExecuting && !isTeacherMode) {
+          statusDiv.textContent = "▶ ESPERANDO PLAY PARA COMENZAR...";
+        }
+      } catch (err) {
+        console.error("Error en tick():", err);
       }
     }
     requestAnimationFrame(tick);
   }
 
-  // 24. Iniciar aplicación
   async function startApp() {
     const cameraReady = await setupCamera();
     if (cameraReady) {
@@ -571,13 +694,12 @@ document.addEventListener("DOMContentLoaded", () => {
         isRunning = true;
         startButton.disabled = true;
         stopButton.disabled = false;
-        statusDiv.textContent = "Esperando PLAY para comenzar...";
+        statusDiv.textContent = "▶ ESPERANDO PLAY PARA COMENZAR...";
         tick();
       }
     }
   }
 
-  // 25. Detener aplicación
   function stopApp() {
     isRunning = false;
     isExecuting = false;
@@ -590,32 +712,87 @@ document.addEventListener("DOMContentLoaded", () => {
     webcam.style.display = "none";
     gameCanvas.style.display = "none";
     cameraPlaceholder.style.display = "block";
-    cameraPlaceholder.innerHTML = `
-                    <div class="camera-icon">📷</div>
-                    <p>Presiona "Comenzar" para activar la cámara</p>
-                `;
 
-    statusDiv.textContent =
-      "Detección detenida. Presiona Comenzar para reiniciar.";
+    while (cameraPlaceholder.firstChild)
+      cameraPlaceholder.removeChild(cameraPlaceholder.firstChild);
+    const icon = document.createElement("div");
+    icon.className = "camera-icon";
+    icon.textContent = "📷";
+    const p = document.createElement("p");
+    p.textContent = 'PRESIONA "COMENZAR" PARA ACTIVAR LA CÁMARA';
+    cameraPlaceholder.appendChild(icon);
+    cameraPlaceholder.appendChild(p);
+
+    statusDiv.textContent = "PRESIONA COMENZAR.";
   }
 
-  // 26. Reiniciar programa
   function resetProgram() {
+    if (config.customCharacter) {
+      try {
+        URL.revokeObjectURL(config.customCharacter);
+      } catch (_) {}
+      config.customCharacter = null;
+    }
+    if (config.customObjective) {
+      try {
+        URL.revokeObjectURL(config.customObjective);
+      } catch (_) {}
+      config.customObjective = null;
+    }
+
     program = [];
     isWaitingForPlay = true;
     isExecuting = false;
+    config.startPosition = { x: 0, y: 0 };
+    config.targetPosition = { x: 5, y: 5 };
     applyConfiguration();
   }
 
-  // 27. Ajustar tamaño responsive
   function handleResize() {
     if (grid.children.length > 0) {
       initializeGrid();
     }
   }
 
+  function showSuccessMessage() {
+    const overlay = document.createElement("div");
+    overlay.className = "success-overlay";
+
+    const successMsg = document.createElement("div");
+    successMsg.className = "success-message-center";
+
+    const text = document.createElement("div");
+    text.className = "text";
+    text.textContent = "¡FELICITACIONES!";
+    text.style.fontSize = "1rem";
+    text.style.fontWeight = "bold";
+    text.style.marginBottom = "10px";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "close-btn";
+    closeBtn.textContent = "CONTINUAR";
+
+    closeBtn.addEventListener("click", function () {
+      overlay.remove();
+      isExecuting = false;
+      isWaitingForPlay = true;
+      resetProgram();
+    });
+
+    successMsg.appendChild(text);
+
+    successMsg.appendChild(closeBtn);
+
+    overlay.appendChild(successMsg);
+
+    const gridWrapper = document.querySelector(".grid-wrapper");
+    gridWrapper.appendChild(overlay);
+
+    isExecuting = true;
+  }
+
   // Inicializar la aplicación
-  function init() {
+  async function init() {
     // Configurar event listeners
     startButton.addEventListener("click", startApp);
     stopButton.addEventListener("click", stopApp);
